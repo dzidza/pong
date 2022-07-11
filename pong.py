@@ -135,9 +135,9 @@ while True:
     elif keys & pew.K_LEFT and p1x != 0:
         p1x = p1x - 1
 
-    if keys & pew.K_X and p2x != 8 - p2w:
+    if keys & pew.K_O and p2x != 8 - p2w:
         p2x = p2x + 1
-    elif keys & pew.K_O and p2x != 0:
+    elif keys & pew.K_X and p2x != 0:
         p2x = p2x - 1
 
     blink = not blink
