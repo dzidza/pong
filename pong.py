@@ -1,4 +1,5 @@
 import pew
+from random import randint
 
 global angles
 
@@ -12,6 +13,9 @@ angles = {0: [1, 1, 0, -1],  # sharp curve (2x)
 
 
 def setup_values():
+    global pow_x
+    global pow_y
+    global powerup_available
     global x
     global y
     global blink
@@ -28,6 +32,13 @@ def setup_values():
     global direction_x
     global direction_y
     global current_angle
+    global powerup_active
+    global powerup_end
+    global powerup_duration
+
+    powerup_end = -1
+    powerup_duration = 60
+    powerup_available = False
 
     current_angle = 4
 
@@ -53,6 +64,24 @@ def setup_values():
 
     goal = False
 
+def powerup():
+    pow_x = randint(0, 7)
+    pow_y = randint(3, 4)
+    return pow_x, pow_y
+
+def powerup_large(direction_y):
+    global p1w
+    global p2w
+    if direction_y == 1:
+        p1w = 3
+    else:
+        p2w = 3
+
+def undo_powerup():
+    global p1w
+    global p2w
+    p1w = 2
+    p2w = 2
 
 def curve(dx, dy, blink):
     if not blink:
@@ -103,6 +132,24 @@ while True:
     screen.blit(background)
     screen.pixel(x, y, (3 if blink else 2) + (4 if screen.pixel(x, y) in {2, 7} else 0))
 
+
+    if powerup_available:
+        screen.pixel(pow_x, pow_y, 3)
+        if x == pow_x and pow_y == y:
+            powerup_end = frame + powerup_duration
+            powerup_available = False
+            powerup_active = True
+            powerup_large(direction_y)
+
+    if frame % 100 == 0 and not powerup_available:
+        pow_x, pow_y = powerup()
+        screen.pixel(pow_x, pow_y, 3)
+        powerup_available = True
+
+    if powerup_end == frame:
+        undo_powerup()
+
+
     dx, dy = curve(dx, dy, blink)
 
     if y in [0, 7]:
@@ -115,10 +162,18 @@ while True:
         dy = dy * -1
         direction_y = direction_y * -1 if dy != 0 else direction_y
 
-        if x == p2x:
-            current_angle = current_angle - direction_x if current_angle > 0 else current_angle
-        elif x == p2x + p2w - 1:
-            current_angle = current_angle + direction_x if current_angle < 6 else current_angle
+        if (x == p2x and y > 4) or (x == p1x and y < 4):
+            # print(f'x: {x}, p2x: {p2x}, direction_x: {direction_x}')
+            if current_angle == 3:  # straight angle
+                direction_x = -1
+            current_angle = current_angle - direction_x if current_angle > 0 and not (
+                        current_angle == 6 and direction_x == -1) else current_angle
+        elif (x == p2x + p2w - 1 and y > 4) or (x == p1x + p1w - 1 and y < 4):
+            # print(f'x: {x}, p2x: {p2x}, p2w: {p2w}, direction_x: {direction_x}')
+            if current_angle == 3:  # straight angle
+                direction_x = 1
+            current_angle = current_angle + direction_x if current_angle < 6 and not (
+                        current_angle == 0 and direction_x == -1) else current_angle
 
     if x in [0, 7] and blink:
         dx = dx * -1
@@ -127,8 +182,8 @@ while True:
     x = x + dx if blink else x
     y = y + dy if blink else y
 
-    screen.box(1, p1x, p1y, width=2, height=1)
-    screen.box(1, p2x, p2y, width=2, height=1)
+    screen.box(1, p1x, p1y, width=p1w, height=1)
+    screen.box(1, p2x, p2y, width=p2w, height=1)
 
     if keys & pew.K_UP and p1x != 8 - p1w:
         p1x = p1x + 1
