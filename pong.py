@@ -67,7 +67,8 @@ def setup_values():
 def powerup():
     pow_x = randint(0, 7)
     pow_y = randint(3, 4)
-    return pow_x, pow_y
+    pow = randint(0, 1)
+    return pow_x, pow_y, pow
 
 def powerup_large(direction_y):
     global p1w
@@ -76,6 +77,14 @@ def powerup_large(direction_y):
         p1w = 3
     else:
         p2w = 3
+
+def powerup_small(direction_y):
+    global p1w
+    global p2w
+    if direction_y == 1:
+        p2w = 1
+    else:
+        p1w = 1
 
 def undo_powerup():
     global p1w
@@ -134,15 +143,18 @@ while True:
 
 
     if powerup_available:
-        screen.pixel(pow_x, pow_y, 3)
+        screen.pixel(pow_x, pow_y, 2)
         if x == pow_x and pow_y == y:
             powerup_end = frame + powerup_duration
             powerup_available = False
             powerup_active = True
-            powerup_large(direction_y)
+            if pow == 0:
+                powerup_large(direction_y)
+            elif pow == 1:
+                powerup_small(direction_y)
 
     if frame % 100 == 0 and not powerup_available:
-        pow_x, pow_y = powerup()
+        pow_x, pow_y, pow = powerup()
         screen.pixel(pow_x, pow_y, 3)
         powerup_available = True
 
@@ -182,8 +194,8 @@ while True:
     x = x + dx if blink else x
     y = y + dy if blink else y
 
-    screen.box(1, p1x, p1y, width=p1w, height=1)
-    screen.box(1, p2x, p2y, width=p2w, height=1)
+    screen.box(3, p1x, p1y, width=p1w, height=1)
+    screen.box(3, p2x, p2y, width=p2w, height=1)
 
     if keys & pew.K_UP and p1x != 8 - p1w:
         p1x = p1x + 1
